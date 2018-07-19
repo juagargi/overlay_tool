@@ -117,7 +117,6 @@ def ping(dst):
 
     return delay * 1000
 
-
 def measure(f, count, dst):
     measures = []
     for _ in range(0, count):
@@ -136,14 +135,19 @@ def main():
     # build the edges of the (directed) graph for all properties:
     properties = [ping,]
     measures = {}
-    for n in nodes:
-        k = n.label()
-        v = {}
-        for p in properties:
-            kk = p.__name__
-            vv = measure(p, 4, n)
-            v[kk] = vv
-        measures[k] = v
+    for p in properties:
+        this_dimension = {}
+        for n in nodes:
+            this_dimension[n.label()] = measure(p, 4, n)
+        measures[p.__name__] = this_dimension
+    # reverse fold the map
+    measures = {
+        node_name: {prop: measures[prop][node_name]} 
+        for prop in measures.keys()
+        for node_name in measures[prop].keys()
+    }
+
+    # { node_name: { a_property: values     for a_property,all_nodes in measures.items() }  for node_name,values in all_nodes.items()  }   
     measures_json = json.dumps(measures)
     print(measures_json)
     
